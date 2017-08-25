@@ -93,24 +93,27 @@ void loop() {
   // Send ID 12
   switch(state) {
     case State::OFF:
-      cmd[2] = 0xFC;
+      cmd[2] = 0xFC; // 0b11111100
       break;
     case State::STARTING:
-      cmd[2] = 0x86;
+      // may also command up ?
+      // maybe 0xC4  // 0b10100100
+      cmd[2] = 0x86; // 0b10000110
       break;
     case State::UP:
       enc_target = min(enc_a, enc_b);
-      cmd[2] = 0x87;
+      // maybe 0x86  // 0x10000110
+      cmd[2] = 0x87; // 0b10000111
       break;
     case State::DOWN:
       enc_target = max(enc_a, enc_b);
-      cmd[2] = 0x85;
+      cmd[2] = 0x85; // 0b10000101
       break;
     case State::STOPPING1:
-      cmd[2] = 0x87;
+      cmd[2] = 0x87; // 0b10000111
       break;
     case State::STOPPING2:
-      cmd[2] = 0x84;
+      cmd[2] = 0x84; // 0b10000100
       break;
   }
   cmd[0] = enc_target&0xFF;
