@@ -61,12 +61,12 @@ Sending 0x87 for a prolonged period of time causes the encoder values in 0x08 an
 Sending the wrong encoder values with the 0x85 (down?) command causes the motors to move unevenly and the desk to tilt. Sending 0x86 followed by 0x87 eventually corrects this.
 
 # References
- 1. <a name="1">1</a>: http://blog.rnix.de/hacking-ikea-bekant/
- 2. <a name="2">2</a>: https://en.wikipedia.org/wiki/Local_Interconnect_Network  
- 3. <a name="3">3</a>: https://github.com/diodenschein/TableMem
- 4. <a name="4">4</a>: https://plus.google.com/u/1/+GinaH%C3%A4u%C3%9Fge/posts/3U5k1qKdLxH?pageId=none
- 5. <a name="5">5</a>: https://github.com/gandrewstone/LIN
- 6. <a name="6">6</a>: https://github.com/robin7331/IKEA-Hackant
- 7. <a name="7">7</a>: https://www.eevblog.com/forum/beginners/ikea-bekant-desk-motorised-hack/
- 8. <a name="8">8</a>: http://hackaday.com/2017/02/10/ikea-standing-desk-goes-dumb-to-smart-with-lin-bus/
- 9. <a name="9">9</a>: https://blog.adafruit.com/2017/03/27/smarkant-ikea-bekant-adjustable-sitstand-table-controller-reverse-engineered-controlled-with-alexa/
+ 1. <a name="1">http://blog.rnix.de/hacking-ikea-bekant/</a>
+ 2. <a name="2">https://en.wikipedia.org/wiki/Local_Interconnect_Network</a>
+ 3. <a name="3">https://github.com/diodenschein/TableMem</a>
+ 4. <a name="4">https://plus.google.com/u/1/+GinaH%C3%A4u%C3%9Fge/posts/3U5k1qKdLxH?pageId=none</a>
+ 5. <a name="5">https://github.com/gandrewstone/LIN</a>
+ 6. <a name="6">https://github.com/robin7331/IKEA-Hackant</a>
+ 7. <a name="7">https://www.eevblog.com/forum/beginners/ikea-bekant-desk-motorised-hack/</a>
+ 8. <a name="8">http://hackaday.com/2017/02/10/ikea-standing-desk-goes-dumb-to-smart-with-lin-bus/</a>
+ 9. <a name="9">https://blog.adafruit.com/2017/03/27/smarkant-ikea-bekant-adjustable-sitstand-table-controller-reverse-engineered-controlled-with-alexa/</a>
