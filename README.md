@@ -2,9 +2,9 @@
 
 This is a simple Arduino firmware to control the IKEA Bekant motorized sit/stand desk.
 
-Based on a blog post by Robert Nixdorf[1], it's quite clear that the desk is using the 1-wire LIN protocol[2] to communicate between the controller and motors in both legs of the desk.
+Based on a blog post by Robert Nixdorf<sup>[1](#1)</sup>, it's quite clear that the desk is using the 1-wire LIN protocol<sup>[2](#2)</sup> to communicate between the controller and motors in both legs of the desk.
 
-I've seen other posts from Gina Häußge[4], on the EEVblog forum [7], from Robin Reiter[6], and reposted on Hackaday[8] and the AdaFruit Blog[9], but none of these have deciphered the LIN command protocol or completely replaced the existing controller. These hacks mostly focus reading the encoder value from LIN and sending button presses to the controller board, but modifications are a little messy, and I'd rather just plug into the bus and send commands directly.
+I've seen other posts from Gina Häußge<sup>[4](#4)</sup>, on the EEVblog forum <sup>[7](#7)</sup>, from Robin Reiter<sup>[6](#6)</sup>, and reposted on Hackaday<sup>[8](#8)</sup> and the AdaFruit Blog<sup>[9](#9)</sup>, but none of these have deciphered the LIN command protocol or completely replaced the existing controller. These hacks mostly focus reading the encoder value from LIN and sending button presses to the controller board, but modifications are a little messy, and I'd rather just plug into the bus and send commands directly.
 
 LIN is a single-master bus, so in order to send commands we need to unplug the controller completely and replicate everything that it was doing in the replacement device. Luckily the protocol is simple, so this isn't too hard.
 
@@ -12,7 +12,7 @@ I am lucky enough to have access to an oscillocope that can do LIN decoding, so 
 
 The bus schedule was obvious by looking at the traffic. There is sequence of 10 messages, spaced 5 ms apart that repeat every 200ms. The ID sequence is 0x11, 0x08, 0x09, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x01, 0x12.
 
-I implemented a simple LIN master with an Arduino and a MCP2003B LIN transciever based on Andrew Stone's LIN library for arduino[5] that can send these commands in the correct sequence, with the correct timing.
+I implemented a simple LIN master with an Arduino and a MCP2003B LIN transciever based on Andrew Stone's LIN library for arduino<sup>[5](#5)</sup> that can send these commands in the correct sequence, with the correct timing.
 
 LIN is a single-wire shared bus, so it's impossible to tell which node is transmitting from a packet trace or oscilloscope readout. I know that the master must transmit the ID, so I set up my LIN master to transmit the IDs in sequence with no data. I saw that another device (presumably the motors) responded to IDs 0x08 and 0x09, so I know that the master should be reading from those IDs, and writing to the other IDs.
 
@@ -27,7 +27,7 @@ This means that the protocol is:
 0x12: TX 3 bytes
 ```
 
-From my own decoding, and confirmed by the packet dumps in Robert Nixdorf's github repo[3], the pack format for 0x08, 0x09 and 0x12 seems to be a two-byte encoder value followed by a status or command byte. The first byte of the encoder value increments more quickly when the table is moving, so this is probably the LSB.
+From my own decoding, and confirmed by the packet dumps in Robert Nixdorf's github repo<sup>[3](#3)</sup>, the pack format for 0x08, 0x09 and 0x12 seems to be a two-byte encoder value followed by a status or command byte. The first byte of the encoder value increments more quickly when the table is moving, so this is probably the LSB.
 
 I've only seen three status codes on ID's 0x08 and 0x09:
 ```
@@ -60,12 +60,12 @@ Sending 0x87 for a prolonged period of time causes the encoder values in 0x08 an
 
 Sending the wrong encoder values with the 0x85 (down?) command causes the motors to move unevenly and the desk to tilt. Sending 0x86 followed by 0x87 eventually corrects this.
 
-[1]: http://blog.rnix.de/hacking-ikea-bekant/
-[2]: https://en.wikipedia.org/wiki/Local_Interconnect_Network
-[3]: https://github.com/diodenschein/TableMem
-[4]: https://plus.google.com/u/1/+GinaH%C3%A4u%C3%9Fge/posts/3U5k1qKdLxH?pageId=none
-[5]: https://github.com/gandrewstone/LIN
-[6]: https://github.com/robin7331/IKEA-Hackant
-[7]: https://www.eevblog.com/forum/beginners/ikea-bekant-desk-motorised-hack/
-[8]: http://hackaday.com/2017/02/10/ikea-standing-desk-goes-dumb-to-smart-with-lin-bus/
-[9]: https://blog.adafruit.com/2017/03/27/smarkant-ikea-bekant-adjustable-sitstand-table-controller-reverse-engineered-controlled-with-alexa/
+<a name="1">1</a>: http://blog.rnix.de/hacking-ikea-bekant/
+<a name="2">2</a>: https://en.wikipedia.org/wiki/Local_Interconnect_Network
+<a name="3">3</a>: https://github.com/diodenschein/TableMem
+<a name="4">4</a>: https://plus.google.com/u/1/+GinaH%C3%A4u%C3%9Fge/posts/3U5k1qKdLxH?pageId=none
+<a name="5">5</a>: https://github.com/gandrewstone/LIN
+<a name="6">6</a>: https://github.com/robin7331/IKEA-Hackant
+<a name="7">7</a>: https://www.eevblog.com/forum/beginners/ikea-bekant-desk-motorised-hack/
+<a name="8">8</a>: http://hackaday.com/2017/02/10/ikea-standing-desk-goes-dumb-to-smart-with-lin-bus/
+<a name="9">9</a>: https://blog.adafruit.com/2017/03/27/smarkant-ikea-bekant-adjustable-sitstand-table-controller-reverse-engineered-controlled-with-alexa/
