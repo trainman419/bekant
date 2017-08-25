@@ -24,7 +24,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "Arduino.h"
 #include "lin.h"
-#include <util/delay.h>
 
  //void p(char *fmt, ... );
 
