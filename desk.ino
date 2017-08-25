@@ -6,10 +6,15 @@ void setup() {
   // put your setup code here, to run once:
   lin.begin(19200);
 
+  pinMode(0, INPUT);
+  digitalWrite(0, HIGH);
+
   pinMode(7, INPUT);
   digitalWrite(7, HIGH);
   pinMode(8, INPUT);
   digitalWrite(8, HIGH);
+  pinMode(13, OUTPUT);
+  digitalWrite(13, LOW);
 }
 
 unsigned long t = 0;
@@ -52,23 +57,23 @@ enum class State {
 State state = State::OFF;
 
 void loop() {
-  digitalWrite(LED_BUILTIN, HIGH);
   // put your main code here, to run repeatedly:
   uint8_t empty[] = { 0, 0, 0 };
   uint8_t node_a[4] = { 0, 0, 0, 0 };
   uint8_t node_b[4] = { 0, 0, 0, 0 };
   uint8_t cmd[3] = { 0, 0, 0 };
+  uint8_t res = 0;
 
   // Send ID 11
   lin.send(0x11, empty, 3, 2);
   delay_until(5);
 
   // Recv from ID 08
-  lin.recv(0x08, node_a, 3, 2);
+  res = lin.recv(0x08, node_a, 3, 2);
   delay_until(5);
 
   // Recv from ID 09
-  lin.recv(0x09, node_b, 3, 2);
+  res = lin.recv(0x09, node_b, 3, 2);
   delay_until(5);
 
   // Send ID 10, 6 times
@@ -81,9 +86,11 @@ void loop() {
   lin.send(0x01, 0, 0, 2);
   delay_until(5);
 
+  uint16_t enc_a = node_a[0] | (node_a[1] << 8);
+  uint16_t enc_b = node_b[0] | (node_b[1] << 8);
+  uint16_t enc_target = enc_a;
+
   // Send ID 12
-  cmd[0] = node_a[0];
-  cmd[1] = node_b[1];
   switch(state) {
     case State::OFF:
       cmd[2] = 0xFC;
@@ -92,9 +99,11 @@ void loop() {
       cmd[2] = 0x86;
       break;
     case State::UP:
+      enc_target = min(enc_a, enc_b);
       cmd[2] = 0x87;
       break;
     case State::DOWN:
+      enc_target = max(enc_a, enc_b);
       cmd[2] = 0x85;
       break;
     case State::STOPPING1:
@@ -104,15 +113,20 @@ void loop() {
       cmd[2] = 0x84;
       break;
   }
-  cmd[2] = 0xFC;
+  cmd[0] = enc_target&0xFF;
+  cmd[1] = enc_target>>8;
   lin.send(0x12, cmd, 3, 2);
 
   // read buttons and compute next state
   Command user_cmd = Command::NONE;
   if(digitalRead(7) == 0) { // UP
+    digitalWrite(13, HIGH);
     user_cmd = Command::UP;
   } else if(digitalRead(8) == 0) { // DOWN
     user_cmd = Command::DOWN;
+    digitalWrite(13, HIGH);
+  } else {
+    digitalWrite(13, LOW);    
   }
 
   switch(state) {
@@ -156,9 +170,11 @@ void loop() {
         state = State::OFF;
       }
       break;
+    default:
+      state = State::OFF;
+      break;
   }
 
   // Wait the remaining 150 ms in the cycle
-  digitalWrite(LED_BUILTIN, HIGH);
   delay_until(150);
 }
