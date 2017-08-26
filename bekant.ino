@@ -172,14 +172,11 @@ void loop() {
       cmd[2] = 0xFC; // 0b11111100
       break;
     case State::STARTING:
-      // may also command up ?
-      // maybe 0xC4  // 0b10100100
-      cmd[2] = 0x86; // 0b10000110
+      cmd[2] = 0xC4; // 0b10100100
       break;
     case State::UP:
       enc_target = min(enc_a, enc_b);
-      // maybe 0x86  // 0x10000110
-      cmd[2] = 0x87; // 0b10000111
+      cmd[2] = 0x86; // 0b10000110
       break;
     case State::DOWN:
       enc_target = max(enc_a, enc_b);
@@ -216,8 +213,8 @@ void loop() {
       }
       break;
     case State::STARTING:
-      if ( node_a[2] == 0x02 && node_b[2] == 0x02) {
-        switch (user_cmd) {
+      //if( node_a[2] == 0x02 && node_b[2] == 0x02) {
+        switch(user_cmd) {
           case Command::NONE:
             state = State::OFF;
             break;
@@ -228,7 +225,7 @@ void loop() {
             state = State::DOWN;
             break;
         }
-      }
+      //}
       break;
     case State::UP:
       if (user_cmd != Command::UP) {
