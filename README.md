@@ -2,6 +2,18 @@
 
 This is a simple Arduino firmware to control the IKEA Bekant motorized sit/stand desk.
 
+## Circuit
+
+The circuit for this sketch is based on an MCP2003B LIN transceiver.
+
+![Schematic][Bekant_schem.png]
+
+And the accompanying schematic.
+
+![Breadboard][Bekant_bb.png]
+
+## Details of operation
+
 Based on a blog post by Robert Nixdorf<sup>[1](#1)</sup>, it's quite clear that the desk is using the 1-wire LIN protocol<sup>[2](#2)</sup> to communicate between the controller and motors in both legs of the desk.
 
 I've seen other posts from Gina Häußge<sup>[4](#4)</sup>, on the EEVblog forum <sup>[7](#7)</sup>, from Robin Reiter<sup>[6](#6)</sup>, and reposted on Hackaday<sup>[8](#8)</sup> and the AdaFruit Blog<sup>[9](#9)</sup>, but none of these have deciphered the LIN command protocol or completely replaced the existing controller. These hacks mostly focus reading the encoder value from LIN and sending button presses to the controller board, but modifications are a little messy, and I'd rather just plug into the bus and send commands directly.
