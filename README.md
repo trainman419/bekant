@@ -6,11 +6,11 @@ This is a simple Arduino firmware to control the IKEA Bekant motorized sit/stand
 
 The circuit for this sketch is based on an MCP2003B LIN transceiver.
 
-![Schematic](Bekant_schem.png)
+![Breadboard](Bekant_bb.png)
 
 And the accompanying schematic.
 
-![Breadboard](Bekant_bb.png)
+![Schematic](Bekant_schem.png)
 
 ## Details of operation
 
