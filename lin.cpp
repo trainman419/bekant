@@ -25,42 +25,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Arduino.h"
 #include "lin.h"
 
- //void p(char *fmt, ... );
-
-LinScheduleEntry::LinScheduleEntry()
+Lin::Lin(LIN_SERIAL& ser,uint8_t TxPin)
+  : serial(ser)
+  , txPin(TxPin)
 {
-  // Just clear it out
-  skewChildren.Left = 0; skewChildren.Right = 0;
-  trigger = 0;
-  callback = 0;
-  addr = 0;
-  len  = 0;
-}
-
-Lin::Lin(LIN_SERIAL& ser,uint8_t TxPin): serial(ser), txPin(TxPin)
-{
-}
-
-void Lin::loop()
-{
-  LinScheduleEntry& e = scheduler.front();
-  
-  if ((&e)&&(e.trigger < millis()))
-    {
-      // remove this frame from the top of the heap.
-      scheduler.pop();
-      uint8_t proto = (e.flags&Lin2Frame) ? 2:1; 
-      // Do the correct LIN operation
-      if (e.flags&LinReadFrame) recv(e.addr,e.data,e.len,proto);
-      else                      send(e.addr,e.data,e.len,proto);
-
-      // If there is a callback function, call it.
-      if (e.callback)
-        {
-        uint16_t reschedule = e.callback(&e);
-        if (reschedule) add(e,reschedule);  // Put the frame back on if the caller wants to repeat.
-        }
-    }  
 }
 
 void Lin::begin(int speed)
@@ -73,7 +41,6 @@ void Lin::begin(int speed)
   unsigned long int nominalFrameTime = ((34*Tbit)+90*Tbit);  // 90 = 10*max # payload bytes + checksum (9). 
   timeout = LIN_TIMEOUT_IN_FRAMES * 14 * nominalFrameTime;  // 14 is the specced addtl 40% space above normal*10 -- the extra 10 is just pulled out of the 1000000 needed to convert to uSec (so that there are no decimal #s).
 }
-
 
 // Generate a BREAK signal (a low signal for longer than a byte) across the serial line
 void Lin::serialBreak(void)
@@ -126,8 +93,6 @@ void Lin::send(uint8_t addr, const uint8_t* message, uint8_t nBytes,uint8_t prot
   serial.write(message,nBytes);  // data bytes
   serial.write(cksum);  // checksum  
 }
-
-
 
 uint8_t Lin::recv(uint8_t addr, uint8_t* message, uint8_t nBytes,uint8_t proto)
 {
