@@ -55,7 +55,7 @@ void Lin::serialBreak(void)
   else delayMicroseconds(brkbegin);
   
   digitalWrite(txPin, HIGH);  // BREAK delimiter
- 
+
   if (brkend > 16383) delay(brkend/1000);  // delayMicroseconds unreliable above 16383 see arduino man pages
   else delayMicroseconds(brkend);
 

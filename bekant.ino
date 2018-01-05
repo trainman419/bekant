@@ -1,20 +1,49 @@
+#include <ESP8266WiFi.h>
+#include <aREST.h>
+#include <aREST_UI.h>
+
 #include "lin.h"
 
-Lin lin;
+#define UP_BTN 0
+#define DOWN_BTN 13
+#define LED 5
+// TODO: this should be pin 7 ( or electrically connected to pin 7)
+#define TX_PIN 12
+#define RX_PIN 8
+
+Lin lin(Serial, TX_PIN);
+
+aREST_UI rest = aREST_UI();
+
+const char * ssid = "Linksays";
+const char * password = "deskdeskdesk";
+
+WiFiServer server(80);
+
+int height = 0;
 
 void setup() {
   // put your setup code here, to run once:
   lin.begin(19200);
 
-  pinMode(0, INPUT);
-  digitalWrite(0, HIGH);
+  pinMode(UP_BTN, INPUT);
+  digitalWrite(UP_BTN, HIGH);
+  pinMode(DOWN_BTN, INPUT);
+  digitalWrite(DOWN_BTN, HIGH);
+  pinMode(LED, OUTPUT);
+  digitalWrite(LED, LOW);
 
-  pinMode(7, INPUT);
-  digitalWrite(7, HIGH);
-  pinMode(8, INPUT);
-  digitalWrite(8, HIGH);
-  pinMode(13, OUTPUT);
-  digitalWrite(13, LOW);
+  rest.title("Desk");
+  rest.variable("Height", &height);
+  rest.label("Height");
+  rest.set_name("esp8266");
+
+  WiFi.mode(WIFI_AP);
+
+  //WiFi.softAP(ssid, password);
+  WiFi.softAP(ssid);
+
+  server.begin();
 }
 
 unsigned long t = 0;
@@ -30,12 +59,12 @@ void delay_until(unsigned long ms) {
     return;
   }
   
-  while(d > 1000) {
+  while (d > 1000) {
     delay(1);
     d -= 1000;
   }
-  d = end - micros();
-  delayMicroseconds(d);
+  //d = end - micros();
+  //delayMicroseconds(d);
   t = end;
 }
 
@@ -64,6 +93,7 @@ void loop() {
   uint8_t cmd[3] = { 0, 0, 0 };
   uint8_t res = 0;
 
+
   // Send ID 11
   lin.send(0x11, empty, 3, 2);
   delay_until(5);
@@ -77,7 +107,7 @@ void loop() {
   delay_until(5);
 
   // Send ID 10, 6 times
-  for(uint8_t i=0; i<6; i++) {
+  for (uint8_t i = 0; i < 6; i++) {
     lin.send(0x10, 0, 0, 2);
     delay_until(5);
   }
@@ -91,7 +121,7 @@ void loop() {
   uint16_t enc_target = enc_a;
 
   // Send ID 12
-  switch(state) {
+  switch (state) {
     case State::OFF:
       cmd[2] = 0xFC; // 0b11111100
       break;
@@ -116,33 +146,33 @@ void loop() {
       cmd[2] = 0x84; // 0b10000100
       break;
   }
-  cmd[0] = enc_target&0xFF;
-  cmd[1] = enc_target>>8;
+  cmd[0] = enc_target & 0xFF;
+  cmd[1] = enc_target >> 8;
   lin.send(0x12, cmd, 3, 2);
 
   // read buttons and compute next state
   Command user_cmd = Command::NONE;
-  if(digitalRead(7) == 0) { // UP
-    digitalWrite(13, HIGH);
+  if (digitalRead(UP_BTN) == 0) { // UP
+    digitalWrite(LED, HIGH);
     user_cmd = Command::UP;
-  } else if(digitalRead(8) == 0) { // DOWN
+  } else if (digitalRead(DOWN_BTN) == 0) { // DOWN
     user_cmd = Command::DOWN;
-    digitalWrite(13, HIGH);
+    digitalWrite(LED, HIGH);
   } else {
-    digitalWrite(13, LOW);    
+    digitalWrite(LED, LOW);
   }
 
-  switch(state) {
+  switch (state) {
     case State::OFF:
-      if(user_cmd != Command::NONE) {
-        if( node_a[2] == 0x60 && node_b[2] == 0x60) {
+      if (user_cmd != Command::NONE) {
+        if ( node_a[2] == 0x60 && node_b[2] == 0x60) {
           state = State::STARTING;
         }
       }
       break;
     case State::STARTING:
-      if( node_a[2] == 0x02 && node_b[2] == 0x02) {
-        switch(user_cmd) {
+      if ( node_a[2] == 0x02 && node_b[2] == 0x02) {
+        switch (user_cmd) {
           case Command::NONE:
             state = State::OFF;
             break;
@@ -156,12 +186,12 @@ void loop() {
       }
       break;
     case State::UP:
-      if(user_cmd != Command::UP) {
+      if (user_cmd != Command::UP) {
         state = State::STOPPING1;
       }
       break;
     case State::DOWN:
-      if(user_cmd != Command::DOWN) {
+      if (user_cmd != Command::DOWN) {
         state = State::STOPPING1;
       }
       break;
@@ -169,13 +199,23 @@ void loop() {
       state = State::STOPPING2;
       break;
     case State::STOPPING2:
-      if( node_a[2] == 0x60 && node_b[2] == 0x60) {
+      if ( node_a[2] == 0x60 && node_b[2] == 0x60) {
         state = State::OFF;
       }
       break;
     default:
       state = State::OFF;
       break;
+  }
+
+  // Use the remaining time to service clients
+  WiFiClient client = server.available();
+  if(client) {
+    while(!client.available()) {
+      delay(1);
+    }
+    rest.handle(client);
+    height++;
   }
 
   // Wait the remaining 150 ms in the cycle
