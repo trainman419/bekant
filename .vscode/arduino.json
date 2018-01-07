@@ -1,0 +1,7 @@
+{
+    "board": "esp8266:esp8266:thingdev",
+    "configuration": "CpuFrequency=80,FlashSize=512K0,LwIPVariant=v2mss536,Debug=Disabled,DebugLevel=None____,UploadSpeed=921600",
+    "sketch": "bekant.ino",
+    "output": "../build",
+    "port": "COM8"
+}

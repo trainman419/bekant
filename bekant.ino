@@ -7,6 +7,7 @@
 #define UP_BTN 0
 #define DOWN_BTN 13
 #define LED 5
+#define LED_ON LOW
 // TODO: this should be pin 7 ( or electrically connected to pin 7)
 #define TX_PIN 12
 #define RX_PIN 8
@@ -22,21 +23,57 @@ WiFiServer server(80);
 
 int height = 0;
 
+enum class Command {
+  NONE,
+  UP,
+  DOWN,
+};
+
+Command user_cmd = Command::NONE;
+
+int up(bool pushed) {
+  if(pushed) {
+    digitalWrite(LED, LED_ON);
+    user_cmd = Command::UP;
+    height++;
+  } else {
+    digitalWrite(LED, !LED_ON);
+    user_cmd = Command::NONE;
+  }
+}
+
+int down(bool pushed) {
+  if(pushed) {
+    digitalWrite(LED, LED_ON);
+    user_cmd = Command::DOWN;
+    height--;
+  } else {
+    digitalWrite(LED, !LED_ON);
+    user_cmd = Command::NONE;
+  }
+}
+
+int restCallback(String answer) {
+  return rest.buttonCallback(answer);
+}
+
 void setup() {
   // put your setup code here, to run once:
   lin.begin(19200);
 
-  pinMode(UP_BTN, INPUT);
-  digitalWrite(UP_BTN, HIGH);
-  pinMode(DOWN_BTN, INPUT);
-  digitalWrite(DOWN_BTN, HIGH);
+  pinMode(UP_BTN, INPUT_PULLUP);
+  pinMode(DOWN_BTN, INPUT_PULLUP);
   pinMode(LED, OUTPUT);
-  digitalWrite(LED, LOW);
+  digitalWrite(LED, !LED_ON);
 
   rest.title("Desk");
   rest.variable("Height", &height);
   rest.label("Height");
   rest.set_name("esp8266");
+
+  rest.buttonFunction("Up", &up);
+  rest.buttonFunction("Down", &down);
+  rest.function("ui_callback", &restCallback);
 
   WiFi.mode(WIFI_AP);
 
@@ -67,12 +104,6 @@ void delay_until(unsigned long ms) {
   //delayMicroseconds(d);
   t = end;
 }
-
-enum class Command {
-  NONE,
-  UP,
-  DOWN,
-};
 
 enum class State {
   OFF,
@@ -119,6 +150,7 @@ void loop() {
   uint16_t enc_a = node_a[0] | (node_a[1] << 8);
   uint16_t enc_b = node_b[0] | (node_b[1] << 8);
   uint16_t enc_target = enc_a;
+  height = enc_a;
 
   // Send ID 12
   switch (state) {
@@ -151,16 +183,17 @@ void loop() {
   lin.send(0x12, cmd, 3, 2);
 
   // read buttons and compute next state
-  Command user_cmd = Command::NONE;
+  /*
   if (digitalRead(UP_BTN) == 0) { // UP
-    digitalWrite(LED, HIGH);
+    digitalWrite(LED, LED_ON);
     user_cmd = Command::UP;
   } else if (digitalRead(DOWN_BTN) == 0) { // DOWN
     user_cmd = Command::DOWN;
-    digitalWrite(LED, HIGH);
+    digitalWrite(LED, LED_ON);
   } else {
-    digitalWrite(LED, LOW);
+    digitalWrite(LED, !LED_ON);
   }
+  */
 
   switch (state) {
     case State::OFF:
@@ -215,7 +248,6 @@ void loop() {
       delay(1);
     }
     rest.handle(client);
-    height++;
   }
 
   // Wait the remaining 150 ms in the cycle
