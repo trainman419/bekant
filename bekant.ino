@@ -1,9 +1,11 @@
+#include "lin.h"
+
+#ifdef ESP8266
 #include <ESP8266WiFi.h>
 #include <aREST.h>
 #include <aREST_UI.h>
 
-#include "lin.h"
-
+// Pin settings for Sparkfun ESP8266 Thing Dev
 #define UP_BTN 0
 #define DOWN_BTN 13
 #define LED 5
@@ -11,14 +13,25 @@
 #define TX_PIN 1
 #define RX_PIN 3
 
+#else
+// Standard arduino settings
+#define UP_BTN 7
+#define DOWN_BTN 8
+#define LED 13
+#define LED_ON HIGH
+#define TX_PIN 1
+#define RX_PIN 0
+#endif
+
 Lin lin(Serial, TX_PIN);
 
+#ifdef ESP8266
 aREST_UI rest = aREST_UI();
 
 const char * ssid = "Linksays";
-const char * password = "deskdeskdesk";
 
 WiFiServer server(80);
+#endif
 
 int height = 0;
 
@@ -34,7 +47,6 @@ int up(bool pushed) {
   if(pushed) {
     digitalWrite(LED, LED_ON);
     user_cmd = Command::UP;
-    height++;
   } else {
     digitalWrite(LED, !LED_ON);
     user_cmd = Command::NONE;
@@ -45,16 +57,17 @@ int down(bool pushed) {
   if(pushed) {
     digitalWrite(LED, LED_ON);
     user_cmd = Command::DOWN;
-    height--;
   } else {
     digitalWrite(LED, !LED_ON);
     user_cmd = Command::NONE;
   }
 }
 
+#ifdef ESP8266
 int restCallback(String answer) {
   return rest.buttonCallback(answer);
 }
+#endif
 
 void setup() {
   // put your setup code here, to run once:
@@ -65,6 +78,7 @@ void setup() {
   pinMode(LED, OUTPUT);
   digitalWrite(LED, !LED_ON);
 
+#ifdef ESP8266
   rest.title("Desk");
   rest.variable("Height", &height);
   rest.label("Height");
@@ -80,6 +94,7 @@ void setup() {
   WiFi.softAP(ssid);
 
   server.begin();
+#endif
 }
 
 unsigned long t = 0;
@@ -182,17 +197,15 @@ void loop() {
   lin.send(0x12, cmd, 3, 2);
 
   // read buttons and compute next state
-  /*
+#ifndef ESP8266
   if (digitalRead(UP_BTN) == 0) { // UP
-    digitalWrite(LED, LED_ON);
-    user_cmd = Command::UP;
+    up(true);
   } else if (digitalRead(DOWN_BTN) == 0) { // DOWN
-    user_cmd = Command::DOWN;
-    digitalWrite(LED, LED_ON);
+    down(true);
   } else {
-    digitalWrite(LED, !LED_ON);
+    up(false);
   }
-  */
+#endif
 
   switch (state) {
     case State::OFF:
@@ -240,6 +253,7 @@ void loop() {
       break;
   }
 
+#ifdef ESP8266
   // Use the remaining time to service clients
   WiFiClient client = server.available();
   if(client) {
@@ -248,6 +262,7 @@ void loop() {
     }
     rest.handle(client);
   }
+#endif
 
   // Wait the remaining 150 ms in the cycle
   delay_until(150);
