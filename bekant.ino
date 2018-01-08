@@ -8,9 +8,8 @@
 #define DOWN_BTN 13
 #define LED 5
 #define LED_ON LOW
-// TODO: this should be pin 7 ( or electrically connected to pin 7)
-#define TX_PIN 12
-#define RX_PIN 8
+#define TX_PIN 1
+#define RX_PIN 3
 
 Lin lin(Serial, TX_PIN);
 
@@ -86,8 +85,8 @@ void setup() {
 unsigned long t = 0;
 
 void delay_until(unsigned long ms) {
-  long end = t + (1000 * ms);
-  long d = end - micros();
+  unsigned long end = t + (1000 * ms);
+  unsigned long d = end - micros();
 
   // crazy long delay; probably negative wrap-around
   // just return
@@ -96,12 +95,12 @@ void delay_until(unsigned long ms) {
     return;
   }
   
-  while (d > 1000) {
-    delay(1);
-    d -= 1000;
+  if (d > 15000) {
+    unsigned long d2 = (d-15000)/1000;
+    delay(d2);
+    d = end - micros();
   }
-  //d = end - micros();
-  //delayMicroseconds(d);
+  delayMicroseconds(d);
   t = end;
 }
 

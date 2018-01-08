@@ -45,12 +45,15 @@ void Lin::begin(int speed)
 // Generate a BREAK signal (a low signal for longer than a byte) across the serial line
 void Lin::serialBreak(void)
 {
-  if (serialOn) serial.end();
+  if (serialOn) {
+    serial.flush();
+    serial.end();
+  }
 
   pinMode(txPin, OUTPUT);
   digitalWrite(txPin, LOW);  // Send BREAK
-  unsigned long int brkend = (1000000UL/((unsigned long int)serialSpd));
-  unsigned long int brkbegin = brkend*LIN_BREAK_DURATION;
+  const unsigned long int brkend = (1000000UL/((unsigned long int)serialSpd));
+  const unsigned long int brkbegin = brkend*LIN_BREAK_DURATION;
   if (brkbegin > 16383) delay(brkbegin/1000);  // delayMicroseconds unreliable above 16383 see arduino man pages
   else delayMicroseconds(brkbegin);
   
@@ -91,7 +94,8 @@ void Lin::send(uint8_t addr, const uint8_t* message, uint8_t nBytes,uint8_t prot
   serial.write(0x55);  // Sync byte
   serial.write(addrbyte);  // ID byte
   serial.write(message,nBytes);  // data bytes
-  serial.write(cksum);  // checksum  
+  serial.write(cksum);  // checksum
+  serial.flush();
 }
 
 uint8_t Lin::recv(uint8_t addr, uint8_t* message, uint8_t nBytes,uint8_t proto)
@@ -102,10 +106,7 @@ uint8_t Lin::recv(uint8_t addr, uint8_t* message, uint8_t nBytes,uint8_t proto)
   serial.flush();
   serial.write(0x55);  // Sync byte
   uint8_t idByte = (addr&0x3f) | addrParity(addr);
-  //p("ID byte %d", idByte);
   serial.write(idByte);  // ID byte
-  pinMode(txPin, INPUT);
-  digitalWrite(txPin, LOW);  // don't pull up
   bytesRcvd = 0xfd;
   do { // I hear myself
     while(!serial.available()) { delayMicroseconds(100); timeoutCount+= 100; if (timeoutCount>=timeout) goto done; }
@@ -131,11 +132,10 @@ uint8_t Lin::recv(uint8_t addr, uint8_t* message, uint8_t nBytes,uint8_t proto)
     bytesRcvd++;
     if (proto==1) idByte = 0;  // Don't cksum the ID byte in LIN 1.x
     if (dataChecksum(message,nBytes,idByte) == cksum) bytesRcvd = 0xff;
-    //p("cksum byte %x, calculated %x %x\n",cksum,dataChecksum(message,nBytes,idByte),dataChecksum(message,nBytes,0));
   }
 
 done:
-  pinMode(txPin, OUTPUT);
+  serial.flush();
 
   return bytesRcvd;
 }
