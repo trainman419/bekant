@@ -73,7 +73,7 @@ Sending 0x87 for a prolonged period of time causes the encoder values in 0x08 an
 Sending the wrong encoder values with the 0x85 (down?) command causes the motors to move unevenly and the desk to tilt. Sending 0x86 followed by 0x87 eventually corrects this.
 
 # References
- 1. <a name="1">http://blog.rnix.de/hacking-ikea-bekant/</a>
+ 1. <a name="1">https://web.archive.org/web/20190116092248/https://blog.rnix.de/hacking-ikea-bekant/</a>
  2. <a name="2">https://en.wikipedia.org/wiki/Local_Interconnect_Network</a>
  3. <a name="3">https://github.com/diodenschein/TableMem</a>
  4. <a name="4">https://plus.google.com/u/1/+GinaH%C3%A4u%C3%9Fge/posts/3U5k1qKdLxH?pageId=none</a>
